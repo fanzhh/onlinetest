@@ -4,9 +4,6 @@ import $ from 'jquery';
 import './App.css';
 
 class DescriptionBar extends Component {
-  constructor(props) {
-    super(props);
-  }
   render() {
     return <p>{this.props.description}</p>
   }
@@ -55,9 +52,6 @@ class SubmitBar extends Component {
 }
 
 class QuestionBar extends Component {
-  constructor(props) {
-    super(props);
-  }
   render() {
     return (
       <div>
@@ -116,7 +110,7 @@ class App extends Component {
     })})
   }
   handleChange(event) {
-    const id = parseInt(event.target.id.split('_')[0]);
+    const id = parseInt(event.target.id.split('_')[0],0);
     const selection = event.target.id.split('_')[1];
     const type = event.target.type;
     var answers = this.state.answers;
