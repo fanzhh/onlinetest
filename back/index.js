@@ -12,7 +12,7 @@ index.use(function(req,res,next){
 
 index.get('/data', function(req, res){
     results = [];
-    db.all("SELECT * from question order by remark,description", function(err, rows){
+    db.all("SELECT * from question order by remark,number", function(err, rows){
         rows.map((row)=>{
         results.push({"id":row.id,
                   "description":row.description,

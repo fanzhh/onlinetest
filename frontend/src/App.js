@@ -15,6 +15,10 @@ class DescriptionBar extends Component {
 class SelectionsBar extends Component {
   constructor(props) {
     super(props);
+    this.handleChange=this.handleChange.bind(this);
+  }
+  handleChange(event) {
+    this.props.onChange(event)
   }
   render() {
     var selection_type = this.props.remark === '1' ? 'checkbox' : 'radio';
@@ -22,11 +26,11 @@ class SelectionsBar extends Component {
     return (
       <form>
         <fieldset>
-          <input name={selection_name} type={selection_type} id={this.props.id+'_A'} value='A' /><label htmlFor={this.props.id+'_A'}>{this.props.answerA}</label><br />
-          <input name={selection_name}  type={selection_type} id={this.props.id+'_B'} value='B' /><label htmlFor={this.props.id+'_B'}>{this.props.answerB}</label><br />
-          {this.props.answerC === '' ? '' : (<span><input name={selection_name}  type={selection_type} id={this.props.id+'_C'} value='C' /><label htmlFor={this.props.id+'_C'}>{this.props.answerC}</label><br /></span>)}
-          {this.props.answerD === '' ? '' : (<span><input name={selection_name}  type={selection_type} id={this.props.id+'_D'} value='D' /><label htmlFor={this.props.id+'_D'}>{this.props.answerD}</label><br /></span>)}
-          {this.props.answerE === '' ? '' : (<span><input name={selection_name}  type={selection_type} id={this.props.id+'_E'} value='E' /><label htmlFor={this.props.id+'_E'}>{this.props.answerE}</label><br /></span>)}
+          <input name={selection_name} type={selection_type} id={this.props.id+'_A'} value='A' onChange={this.handleChange} /><label htmlFor={this.props.id+'_A'}>{this.props.answerA}</label><br />
+          <input name={selection_name}  type={selection_type} id={this.props.id+'_B'} value='B'  onChange={this.handleChange} /><label htmlFor={this.props.id+'_B'}>{this.props.answerB}</label><br />
+          {this.props.answerC === '' ? '' : (<span><input name={selection_name}  type={selection_type} id={this.props.id+'_C'} value='C'  onChange={this.handleChange} /><label htmlFor={this.props.id+'_C'}>{this.props.answerC}</label><br /></span>)}
+          {this.props.answerD === '' ? '' : (<span><input name={selection_name}  type={selection_type} id={this.props.id+'_D'} value='D'  onChange={this.handleChange} /><label htmlFor={this.props.id+'_D'}>{this.props.answerD}</label><br /></span>)}
+          {this.props.answerE === '' ? '' : (<span><input name={selection_name}  type={selection_type} id={this.props.id+'_E'} value='E'  onChange={this.handleChange} /><label htmlFor={this.props.id+'_E'}>{this.props.answerE}</label><br /></span>)}
         </fieldset>
       </form>
     )
@@ -36,11 +40,15 @@ class SelectionsBar extends Component {
 class SubmitBar extends Component {
   constructor(props) {
     super(props);
+    this.onClick=this.onClick.bind(this);
+  }
+  onClick(event) {
+    this.props.onClick(event)
   }
   render() {
     return(
       <form>
-        <button type="submit" onClick={this.props.handleCheckClick} >{this.props.answered?'再来一次':'检查'}</button>
+        <button type="submit" onClick={this.onClick} >{this.props.answered?'再做一遍错题':'检查'}</button>
       </form>
     )
   }
@@ -63,7 +71,9 @@ class QuestionBar extends Component {
             answerD={this.props.question.D}
             answerE={this.props.question.E}
             remark={this.props.question.remark}
-        />
+            onChange={this.props.onChange}
+          />
+          {this.props.answered ? (this.props.question.answer===this.props.answer.answer? ('') : (<p  style={{"color":"red"}}>正确答案：{this.props.question.answer}</p>) ) : ('')}
       </div>
       )
   }
@@ -76,7 +86,10 @@ class App extends Component {
       questions: [],
       current_questions: [],
       answered: false,
+      answers: [],
     }
+    this.handleChange = this.handleChange.bind(this);
+    this.handleCheckClick = this.handleCheckClick.bind(this);
   }
   componentDidMount() {
     var that = this;
@@ -90,19 +103,62 @@ class App extends Component {
       dataType: "json",
       data: {},
       success: function(result) {
-        that.setState({questions:result,current_questions:result,})
+        that.setState({questions:result,current_questions:result,});
+        var answers = [];
+        result.forEach((r)=>{
+          answers.push({'id':r.id,'answer':''})
+        });
+        that.setState({answers:answers,});
       },
       error: function(xhr, status, err) {
         console.log(err.Message);
       },
     })})
   }
+  handleChange(event) {
+    const id = parseInt(event.target.id.split('_')[0]);
+    const selection = event.target.id.split('_')[1];
+    const type = event.target.type;
+    var answers = this.state.answers;
+    if (type==='radio') {
+      answers.find(answer=>answer.id===id).answer = selection;
+    } else {
+      if (event.target.checked) {
+        if (!answers.find(answer=>answer.id===id).answer.includes(selection)){
+          var tmp = answers.find(answer=>answer.id===id).answer + selection;
+          tmp = tmp.split('').sort().join('');
+          answers.find(answer=>answer.id===id).answer = tmp;
+        }
+      } else {
+        if (answers.find(answer=>answer.id===id).answer.includes(selection)){
+          answers.find(answer=>answer.id===id).answer = answers.find(answer=>answer.id===id).answer.replace(selection,'')
+        }
+      }
+    }
+    this.setState({answers:answers,})
+  }
+  handleCheckClick(event) {
+    event.preventDefault();
+    if (event.target.innerHTML==='检查') {
+      this.setState({answered:true,});
+    } else {
+      var current_questions = [];
+      var answers = [];
+      this.state.current_questions.forEach((question)=> {
+        if (this.state.answers.find(answer=>answer.id===question.id).answer!==question.answer) {
+          current_questions.push(question);
+          answers.push({'id':question.id,'answer':''})
+        }
+      });
+      this.setState({current_questions:current_questions,answers:answers,answered:false,})
+    }
+  }
   render() {
     var questions = [];
     this.state.current_questions.forEach((question)=>{
-      questions.push(<div><QuestionBar className="box effect8" key={question.id} question={question} /></div>)
+      questions.push(<div className="box effect2"><QuestionBar key={question.id} question={question} answer={this.state.answers.find(answer=>answer.id===question.id)} answered={this.state.answered} onChange={this.handleChange} /></div>)
     })
-    return <div>{questions}<SubmitBar /></div>
+    return <div><div>{questions}</div><div className="box effect2"><SubmitBar answered={this.state.answered} onClick={this.handleCheckClick} /></div></div>
   }
 }
 
