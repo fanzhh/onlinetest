@@ -1,5 +1,5 @@
 var sqlite3 = require('sqlite3').verbose();
-var db = new sqlite3.Database('db/mydb.db');
+var db = new sqlite3.Database('mydb.db');
 
 var express = require('express');
 var index = express();
