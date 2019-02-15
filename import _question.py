@@ -54,3 +54,13 @@ for line in lines:
                 answerD=an 
             elif an.startswith('E'): // 选项E
                       answerE=an
+
+// 倒入数据库
+conn = sqlite3.connect('mydb.db') // 连接数据库
+c=conn.cursor()  // 获取游标
+i=1 // 计数器，做ID赋值用
+for q in questions:
+    // 执行插入
+    c.execute("insert into question(id,description,answer,A,B,C,D,E,remark) values(%d,'%s','%s','%s','%s','%s','%s','%s','%s')"%(i,q[0],q[1],q[2],q[3],q[4],q[5],q[6],q[7]))                                                 
+    i=i+1
+conn.commit() // 提交   
